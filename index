@@ -313,7 +313,7 @@
       trail.appendChild(spark);
       spark.addEventListener('animationend', () => spark.remove());
     }
-    // ── 뭘봐 떠다니기 ──
+    // 뭘봐
     const COUNT = 10;
     for (let i = 0; i < COUNT; i++) {
       const el = document.createElement('div');
@@ -340,7 +340,7 @@
       document.body.appendChild(el);
     }
 
-    // ── 바보 이스터에그 ──
+    // 클릭 이벤트
     let clickCount = 0;
 
     otl.addEventListener('click', () => {
