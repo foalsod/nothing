@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTL</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@900&display=swap');
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0d0d0d;
+      --text: #e8e0d4;
+      --accent: #c0392b;
+      --grain-opacity: 0.04;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      cursor: none;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity: var(--grain-opacity);
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 9;
+    }
+
+    .stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    
+    .glow {
+      position: absolute;
+      width: 80vmin;
+      height: 40vmin;
+      background: radial-gradient(ellipse, rgba(30,80,200,0.22) 0%, transparent 70%);
+      pointer-events: none;
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.08); }
+    }
+
+    .otl {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(10vw, 16vw, 220px);
+      letter-spacing: 0.12em;
+      line-height: 1;
+      position: relative;
+      user-select: none;
+
+      
+      background: 
+        radial-gradient(
+          ellipse 55% 60% at var(--mx, 50%) var(--my, 40%),
+          rgba(255,255,255,0.55) 0%,
+          rgba(255,255,255,0.08) 45%,
+          transparent 70%
+        ),
+        linear-gradient(
+          180deg,
+          #a0a0a0 0%,
+          #e8e4dc 20%,
+          #ffffff 38%,
+          #c8c0b0 50%,
+          #7a7068 62%,
+          #d4cec4 78%,
+          #f0ece6 90%,
+          #888078 100%
+        );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8)) drop-shadow(0 0 30px rgba(30,80,220,0.35));
+
+
+      opacity: 0;
+      transform: translateY(6px);
+      animation: appear 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+
+    @keyframes appear {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+
+
+    .otl:hover {
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9)) drop-shadow(0 0 50px rgba(30,100,255,0.6)) brightness(1.2);
+      transition: filter 0.3s ease;
+    }
+
+    #cursor-dot {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.08s ease, background 0.2s ease;
+      box-shadow: 0 0 8px 2px rgba(80,140,255,0.9);
+    }
+
+    #cursor-ring {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid rgba(80,140,255,0.7);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+    }
+
+    .trail-spark {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      animation: spark-fade 0.55s ease-out forwards;
+    }
+
+    @keyframes spark-fade {
+      0%   { opacity: 0.75; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.05); }
+    }
+
+    body.on-text #cursor-ring {
+      width: 62px;
+      height: 62px;
+      border-color: rgba(120,180,255,0.95);
+    }
+    body.on-text #cursor-dot {
+      transform: translate(-50%, -50%) scale(1.7);
+      background: #a0c8ff;
+    }
+    #rain-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.75;
+    }
+
+    .babo {
+      position: fixed;
+      pointer-events: none;
+      z-index: 8000;
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 900;
+      font-size: clamp(2rem, 5vw, 4rem);
+      background: linear-gradient(180deg, #a0a0a0 0%, #ffffff 40%, #c8c0b0 60%, #888078 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 12px rgba(80,140,255,0.8));
+      opacity: 0;
+      animation: babo-appear 3s ease forwards;
+      white-space: nowrap;
+      transform: translate(-50%, -50%);
+    }
+
+    @keyframes babo-appear {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+      12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+      20%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+    .float-text {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 900;
+      white-space: nowrap;
+      background: linear-gradient(180deg, #606060 0%, #c0c0c0 40%, #888 60%, #444 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 6px rgba(80,140,255,0.3));
+      opacity: 0;
+      animation: float-drift var(--dur) ease-in-out var(--delay) infinite;
+    }
+
+    @keyframes float-drift {
+      0%   { opacity: 0;    transform: translate(0, 0) scale(0.85); }
+      10%  { opacity: var(--op); transform: translate(0, 0) scale(1); }
+      50%  { opacity: var(--op); transform: translate(var(--dx), var(--dy)) scale(1); }
+      90%  { opacity: var(--op); transform: translate(calc(var(--dx) * 0.5), calc(var(--dy) * 1.2)) scale(1); }
+      100% { opacity: 0;    transform: translate(var(--dx), var(--dy)) scale(0.85); }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="glow"></div>
+    <div class="otl">OTL</div>
+  </div>
+  <canvas id="rain-canvas"></canvas>
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div id="trail-container" style="position:fixed;inset:0;pointer-events:none;z-index:9997;overflow:hidden;"></div>
+
+  <script>
+    const dot   = document.getElementById('cursor-dot');
+    const ring  = document.getElementById('cursor-ring');
+    const trail = document.getElementById('trail-container');
+    const otl   = document.querySelector('.otl');
+
+    let mx = window.innerWidth / 2;
+    let my = window.innerHeight / 2;
+    let ringX = mx, ringY = my;
+    let lastSparkTime = 0;
+
+
+    function animateRing() {
+      ringX += (mx - ringX) * 0.12;
+      ringY += (my - ringY) * 0.12;
+      ring.style.left = ringX + 'px';
+      ring.style.top  = ringY + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.addEventListener('mousemove', (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+
+
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+
+
+      const rect = otl.getBoundingClientRect();
+      const tx = ((mx - rect.left) / rect.width  * 100).toFixed(1);
+      const ty = ((my - rect.top)  / rect.height * 100).toFixed(1);
+      otl.style.setProperty('--mx', tx + '%');
+      otl.style.setProperty('--my', ty + '%');
+
+
+      const overText = (mx >= rect.left && mx <= rect.right && my >= rect.top && my <= rect.bottom);
+      document.body.classList.toggle('on-text', overText);
+
+
+      const now = Date.now();
+      if (now - lastSparkTime > 30) {
+        lastSparkTime = now;
+        spawnSpark(mx, my);
+      }
+    });
+
+    const blueShades = [
+      'rgba(80,140,255,',
+      'rgba(120,180,255,',
+      'rgba(40,80,200,',
+      'rgba(180,210,255,',
+      'rgba(60,120,240,',
+    ];
+
+    function spawnSpark(x, y) {
+      const spark = document.createElement('div');
+      spark.className = 'trail-spark';
+      const size = 3 + Math.random() * 6;
+      const color = blueShades[Math.floor(Math.random() * blueShades.length)];
+      const ox = (Math.random() - 0.5) * 12;
+      const oy = (Math.random() - 0.5) * 12;
+      spark.style.cssText = `
+        left: ${x + ox}px;
+        top:  ${y + oy}px;
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color}0.85);
+        box-shadow: 0 0 ${size * 2}px ${color}0.6);
+      `;
+      trail.appendChild(spark);
+      spark.addEventListener('animationend', () => spark.remove());
+    }
+
+    const rainCanvas = document.getElementById('rain-canvas');
+    const rc = rainCanvas.getContext('2d');
+
+    function resizeRain() {
+      rainCanvas.width  = window.innerWidth;
+      rainCanvas.height = window.innerHeight;
+    }
+    resizeRain();
+    window.addEventListener('resize', resizeRain);
+
+    const DROPS = 300;
+    const drops = Array.from({ length: DROPS }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      len:   14 + Math.random() * 20,
+      speed: 4 + Math.random() * 5,
+      width: 1.2 + Math.random() * 1.4,
+      alpha: 0.45 + Math.random() * 0.4,
+    }));
+
+    function drawRain() {
+      rc.clearRect(0, 0, rainCanvas.width, rainCanvas.height);
+      drops.forEach(d => {
+        const grad = rc.createLinearGradient(d.x, d.y, d.x - d.len * 0.2, d.y + d.len);
+        grad.addColorStop(0, `rgba(180,220,255,0)`);
+        grad.addColorStop(1, `rgba(200,230,255,${d.alpha})`);
+        rc.beginPath();
+        rc.moveTo(d.x, d.y);
+        rc.lineTo(d.x - d.len * 0.2, d.y + d.len);
+        rc.strokeStyle = grad;
+        rc.lineWidth = d.width;
+        rc.stroke();
+
+        d.y += d.speed;
+        d.x -= d.speed * 0.2;
+        if (d.y > rainCanvas.height + 30) {
+          d.y = -30;
+          d.x = Math.random() * rainCanvas.width;
+        }
+      });
+      requestAnimationFrame(drawRain);
+    }
+    drawRain();
+
+
+    const COUNT = 10;
+    for (let i = 0; i < COUNT; i++) {
+      const el = document.createElement('div');
+      el.className = 'float-text';
+      el.textContent = '뭘봐';
+
+      const size = 0.6 + Math.random() * 1.2;           // rem multiplier
+      const dur  = 6 + Math.random() * 8;               // s
+      const delay = -(Math.random() * dur);              // stagger
+      const op   = 0.12 + Math.random() * 0.22;         // opacity (subtle)
+      const dx   = (Math.random() - 0.5) * 120 + 'px';
+      const dy   = (Math.random() - 0.5) * 80  + 'px';
+
+      el.style.cssText = `
+        left: ${5 + Math.random() * 88}vw;
+        top:  ${5 + Math.random() * 88}vh;
+        font-size: ${size}rem;
+        --dur: ${dur}s;
+        --delay: ${delay}s;
+        --op: ${op};
+        --dx: ${dx};
+        --dy: ${dy};
+      `;
+      document.body.appendChild(el);
+    }
+
+
+    let clickCount = 0;
+
+    otl.addEventListener('click', () => {
+      clickCount++;
+      if (clickCount >= 5) {
+        clickCount = 0;
+        spawnBabo();
+      }
+    });
+
+    function spawnBabo() {
+      const el = document.createElement('div');
+      el.className = 'babo';
+      el.textContent = '바보';
+      const pad = 80;
+      el.style.left = (pad + Math.random() * (window.innerWidth  - pad * 2)) + 'px';
+      el.style.top  = (pad + Math.random() * (window.innerHeight - pad * 2)) + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  </script>
+</body>
+</html>
